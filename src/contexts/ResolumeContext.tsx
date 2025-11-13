@@ -74,6 +74,7 @@ export function ResolumeContextProvider({ children }: { children: React.ReactNod
     if (settings.autoReconnect && settings.lastConnected) {
       testConnection();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const value: ResolumeContextValue = {
