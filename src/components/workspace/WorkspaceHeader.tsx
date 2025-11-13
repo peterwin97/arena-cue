@@ -9,9 +9,12 @@ interface WorkspaceHeaderProps {
   currentCueName?: string;
   onGo: () => void;
   isPlaying: boolean;
+  onSave?: () => void;
+  onClose?: () => void;
+  hasUnsavedChanges?: boolean;
 }
 
-export const WorkspaceHeader = ({ projectName, currentCueName, onGo, isPlaying }: WorkspaceHeaderProps) => {
+export const WorkspaceHeader = ({ projectName, currentCueName, onGo, isPlaying, onSave, onClose, hasUnsavedChanges }: WorkspaceHeaderProps) => {
   const [editingName, setEditingName] = useState(false);
 
   return (
@@ -93,6 +96,28 @@ export const WorkspaceHeader = ({ projectName, currentCueName, onGo, isPlaying }
           <span className="text-muted-foreground">Time: </span>
           <span className="text-foreground font-mono">00:00.00</span>
         </div>
+
+        {onSave && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onSave}
+            className="ml-4"
+          >
+            {hasUnsavedChanges ? "Save*" : "Save"}
+          </Button>
+        )}
+
+        {onClose && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="ml-2"
+          >
+            Close
+          </Button>
+        )}
       </div>
     </header>
   );
