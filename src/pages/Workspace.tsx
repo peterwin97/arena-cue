@@ -52,7 +52,8 @@ const Workspace = () => {
       
       await projectStorage.updateLastOpened(projectId);
 
-      if (window.electronAPI) {
+      // Launch Arena composition if linked
+      if (window.electronAPI && project.avcFilePath) {
         const result = await window.electronAPI.launchArenaComposition(project.avcFilePath);
         if (result.success) {
           toast({

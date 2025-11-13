@@ -97,18 +97,10 @@ export const NewProjectDialog = ({ open, onOpenChange }: NewProjectDialogProps) 
       }
     }
 
-    if (!avcPath) {
-      toast({
-        title: "Error",
-        description: "Please select or create an Arena composition",
-        variant: "destructive"
-      });
-      return;
-    }
-
+    // avcPath is now optional - can create project without composition
     try {
       setIsCreating(true);
-      const project = await projectStorage.createProject(projectName.trim(), avcPath);
+      const project = await projectStorage.createProject(projectName.trim(), avcPath || '');
       
       toast({
         title: "Success",
@@ -134,7 +126,7 @@ export const NewProjectDialog = ({ open, onOpenChange }: NewProjectDialogProps) 
         <DialogHeader>
           <DialogTitle>Create New Project</DialogTitle>
           <DialogDescription>
-            Set up a new Resolume Companion project with Arena integration
+            Create a new companion project. Optionally link it to an Arena composition.
           </DialogDescription>
         </DialogHeader>
 
