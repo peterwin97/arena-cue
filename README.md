@@ -22,10 +22,10 @@ This is a multi-process Electron application with three main components:
 │                  Electron (Desktop)                  │
 │  ┌───────────────────────────────────────────────┐  │
 │  │         React Frontend (Vite)                 │  │
-│  │  • Cue List UI                                │  │
-│  │  • Transport Controls                         │  │
-│  │  • Inspector Panel                            │  │
-│  │  Port 8080 (dev)                              │  │
+  │  │  • Cue List UI                                │  │
+  │  │  • Transport Controls                         │  │
+  │  │  • Inspector Panel                            │  │
+  │  │  Port 5173 (dev)                              │  │
 │  └───────────────────────────────────────────────┘  │
 │                        ↕ IPC                         │
 │  ┌───────────────────────────────────────────────┐  │
@@ -92,7 +92,9 @@ Run just the React frontend for UI development:
 npm run dev
 ```
 
-Vite dev server starts at `http://localhost:8080`
+Vite dev server starts at `http://localhost:5173`
+
+> **Note**: Port 5173 is used to avoid conflicts with Resolume Arena (which uses port 8080). When developing with Lovable's web preview, it will show Resolume's interface since the preview requires port 8080. Use the Electron app or direct browser access for the Companion GUI.
 
 ### Option 2: Full Stack Development (Manual)
 
