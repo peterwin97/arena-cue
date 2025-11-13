@@ -1,4 +1,87 @@
-# Welcome to your Lovable project
+# Resolume Companion
+
+Professional cue management companion app for Resolume Arena with QLab-inspired interface.
+
+## Project Structure
+
+```
+root/
+├── electron/           # Electron main process
+│   ├── main.js        # Main Electron process
+│   ├── preload.js     # Preload script for IPC
+│   └── package.json   # Electron config
+├── server/            # Express API for Resolume communication
+│   ├── index.js       # Express server
+│   ├── package.json   # Server dependencies
+│   └── .env          # Server environment variables
+├── client/            # Built client files (production build output)
+│   └── dist/         # Vite build output (created on build)
+├── src/              # React/Vite source code
+│   ├── components/   # React components
+│   ├── pages/        # Page components
+│   ├── hooks/        # Custom React hooks
+│   └── lib/          # Utility functions
+├── public/           # Static assets
+├── index.html        # Entry HTML file
+├── vite.config.ts    # Vite configuration (builds to client/dist)
+└── package.json      # Root package.json
+```
+
+## Development
+
+The project uses:
+- **Vite + React** for the frontend (port 5173)
+- **Express** for the backend API (port 3000)  
+- **Electron** for desktop app wrapper
+
+### Prerequisites
+
+- Node.js 18+ 
+- npm or yarn
+
+### Setup
+
+Install dependencies at root:
+```sh
+npm install
+```
+
+Install server dependencies:
+```sh
+cd server && npm install && cd ..
+```
+
+Install Electron dependencies:
+```sh
+cd electron && npm install && cd ..
+```
+
+### Running in Development
+
+Start Vite dev server:
+```sh
+npm run dev
+```
+
+This runs the React app on port 5173. To run the full Electron stack with Express API, you'll need to run the server and Electron separately (or use concurrently - see scripts below).
+
+### Building for Production
+
+Build the client:
+```sh
+npm run build
+```
+
+This builds the React app to `client/dist/` which Electron loads in production mode.
+
+## Tech Stack
+
+- **Frontend**: React, TypeScript, Tailwind CSS, shadcn/ui
+- **Backend**: Express, Node.js
+- **Desktop**: Electron
+- **Build Tool**: Vite
+- **Routing**: React Router
+- **State Management**: React Query
 
 ## Project info
 
