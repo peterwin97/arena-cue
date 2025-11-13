@@ -18,12 +18,20 @@ const StartMenu = () => {
   const [showOpenProjectDialog, setShowOpenProjectDialog] = useState(false);
 
   useEffect(() => {
+    // Clear any old mock data first
+    projectStorage.clearOldData();
     loadRecentProjects();
   }, []);
 
   const loadRecentProjects = async () => {
-    const projects = await projectStorage.listProjects();
-    setRecentProjects(projects.slice(0, 5)); // Show only 5 most recent
+    try {
+      const projects = await projectStorage.listProjects();
+      console.log('Loaded projects:', projects);
+      setRecentProjects(projects.slice(0, 5)); // Show only 5 most recent
+    } catch (error) {
+      console.error('Failed to load projects:', error);
+      setRecentProjects([]);
+    }
   };
 
   const handleOpenProject = (projectId: string) => {

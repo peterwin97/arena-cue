@@ -122,7 +122,31 @@ class ProjectStorage {
   }
 
   private generateId(): string {
-    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  }
+  
+  // Clear old mock/cached data on first load
+  clearOldData(): void {
+    if (!this.isElectron()) {
+      const hasOldData = localStorage.getItem('companion-projects');
+      if (hasOldData) {
+        try {
+          const data = JSON.parse(hasOldData);
+          // Check if it's old mock data by looking for telltale signs
+          if (Array.isArray(data) && data.length > 0) {
+            const firstProject = data[0];
+            // If it has mock-like structure, clear it
+            if (!firstProject.id || !firstProject.avcFilePath) {
+              console.log('Clearing old mock data from localStorage');
+              localStorage.removeItem('companion-projects');
+            }
+          }
+        } catch {
+          // If parsing fails, clear it
+          localStorage.removeItem('companion-projects');
+        }
+      }
+    }
   }
 }
 
