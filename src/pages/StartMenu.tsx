@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
-import { FileText, FolderOpen, Plus, Clock, Play } from "lucide-react";
+import { FileText, FolderOpen, Plus, Clock, Play, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { projectStorage } from "@/lib/projectStorage";
 import { ProjectMetadata } from "@/types/electron";
@@ -9,13 +9,18 @@ import { OpenProjectDialog } from "@/components/project/OpenProjectDialog";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
+import { ConnectionDialog } from "@/components/settings/ConnectionDialog";
+import { useResolume } from "@/contexts/ResolumeContext";
+import { ConnectionStatusIndicator } from "@/components/settings/ConnectionStatusIndicator";
 
 const StartMenu = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { connectionStatus, connectionSettings } = useResolume();
   const [recentProjects, setRecentProjects] = useState<ProjectMetadata[]>([]);
   const [showNewProjectDialog, setShowNewProjectDialog] = useState(false);
   const [showOpenProjectDialog, setShowOpenProjectDialog] = useState(false);
+  const [showConnectionDialog, setShowConnectionDialog] = useState(false);
 
   useEffect(() => {
     // Clear any old mock data first
@@ -66,6 +71,22 @@ const StartMenu = () => {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-8">
       <div className="w-full max-w-4xl">
+        <div className="absolute top-4 right-4 flex items-center gap-2">
+          <ConnectionStatusIndicator
+            status={connectionStatus}
+            host={connectionSettings.host}
+            port={connectionSettings.port}
+            onClick={() => setShowConnectionDialog(true)}
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowConnectionDialog(true)}
+          >
+            <Settings className="h-4 w-4" />
+          </Button>
+        </div>
+
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold text-foreground mb-3">Resolume Companion</h1>
           <p className="text-muted-foreground text-lg">Professional cue management for Resolume Arena</p>
@@ -166,6 +187,7 @@ const StartMenu = () => {
 
       <NewProjectDialog open={showNewProjectDialog} onOpenChange={setShowNewProjectDialog} />
       <OpenProjectDialog open={showOpenProjectDialog} onOpenChange={setShowOpenProjectDialog} />
+      <ConnectionDialog open={showConnectionDialog} onOpenChange={setShowConnectionDialog} />
     </div>
   );
 };

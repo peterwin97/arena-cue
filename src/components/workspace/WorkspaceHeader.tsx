@@ -1,8 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Play, Square, SkipForward, SkipBack, Pause } from "lucide-react";
+import { Play, Square, SkipForward, SkipBack, Pause, Settings } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useResolume } from "@/contexts/ResolumeContext";
+import { ConnectionStatusIndicator } from "@/components/settings/ConnectionStatusIndicator";
+import { ConnectionDialog } from "@/components/settings/ConnectionDialog";
 
 interface WorkspaceHeaderProps {
   projectName: string;
@@ -16,6 +19,8 @@ interface WorkspaceHeaderProps {
 
 export const WorkspaceHeader = ({ projectName, currentCueName, onGo, isPlaying, onSave, onClose, hasUnsavedChanges }: WorkspaceHeaderProps) => {
   const [editingName, setEditingName] = useState(false);
+  const [showConnectionDialog, setShowConnectionDialog] = useState(false);
+  const { connectionStatus, connectionSettings } = useResolume();
 
   return (
     <header className="h-20 bg-surface border-b border-border flex items-center justify-between px-4 gap-4">
@@ -97,6 +102,14 @@ export const WorkspaceHeader = ({ projectName, currentCueName, onGo, isPlaying, 
           <span className="text-foreground font-mono">00:00.00</span>
         </div>
 
+        <ConnectionStatusIndicator
+          status={connectionStatus}
+          host={connectionSettings.host}
+          port={connectionSettings.port}
+          onClick={() => setShowConnectionDialog(true)}
+          className="ml-4"
+        />
+
         {onSave && (
           <Button
             variant="outline"
@@ -119,6 +132,11 @@ export const WorkspaceHeader = ({ projectName, currentCueName, onGo, isPlaying, 
           </Button>
         )}
       </div>
+
+      <ConnectionDialog
+        open={showConnectionDialog}
+        onOpenChange={setShowConnectionDialog}
+      />
     </header>
   );
 };
