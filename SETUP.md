@@ -5,10 +5,35 @@ This document explains how to set up and run the Electron + React + Express arch
 ## Architecture Overview
 
 - **electron/** - Electron main process that wraps the app as a desktop application
-- **server/** - Express API backend for communicating with Resolume via OSC
+- **server/** - Express API backend with proxy server for connecting to Resolume Arena REST API
 - **src/** - React frontend source code (Vite)
 - **client/dist/** - Production build output (created by `npm run build`)
 
+## Resolume Connection Modes
+
+### Browser Mode (Lovable Sandbox)
+When running in a browser (Lovable sandbox), the app uses a proxy server to connect to Resolume Arena. This bypasses CORS restrictions.
+
+**To connect from the sandbox:**
+1. Start the proxy server: `cd server && npm run dev`
+2. In the app, open Connection Settings
+3. Enter your computer's local IP (e.g., 192.168.0.32) and Resolume's REST API port (default: 7070)
+4. Click "Test & Save"
+
+### Desktop Mode (Electron)
+When running in Electron, the app connects directly to Resolume Arena without needing the proxy server.
+
+## API Endpoints (Server)
+
+- `GET /api/health` - Health check
+- `GET /api/projects` - List projects
+- `POST /api/projects` - Create project
+- `GET /api/cues` - List cues
+- `POST /api/cues` - Create cue
+- `PUT /api/cues/:id` - Update cue
+- `DELETE /api/cues/:id` - Delete cue
+- `POST /api/resolume/connection` - Update Resolume connection target
+- `/api/resolume/proxy/*` - Proxy to Resolume Arena REST API
 ## Installation
 
 ### 1. Install Root Dependencies
@@ -90,17 +115,6 @@ npm run package
 
 - **Root .env**: `VITE_API_URL=http://localhost:3000`
 - **Server .env**: `PORT=3000`
-
-## API Endpoints (Server)
-
-- `GET /api/health` - Health check
-- `GET /api/projects` - List projects
-- `POST /api/projects` - Create project
-- `GET /api/cues` - List cues
-- `POST /api/cues` - Create cue
-- `PUT /api/cues/:id` - Update cue
-- `DELETE /api/cues/:id` - Delete cue
-- `POST /api/resolume/osc` - Send OSC to Resolume
 
 ## Electron IPC API
 

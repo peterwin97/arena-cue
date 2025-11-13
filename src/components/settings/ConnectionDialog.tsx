@@ -130,7 +130,12 @@ export function ConnectionDialog({ trigger, open, onOpenChange }: ConnectionDial
       <DialogHeader>
         <DialogTitle>Resolume Connection Settings</DialogTitle>
         <DialogDescription>
-          Configure the connection to Resolume Arena's REST API
+          Configure the connection to Resolume Arena's REST API.
+          {!(window as any).electronAPI && (
+            <span className="block mt-2 text-xs text-muted-foreground">
+              Browser mode: Using proxy server to connect to Resolume
+            </span>
+          )}
         </DialogDescription>
       </DialogHeader>
 
@@ -141,8 +146,11 @@ export function ConnectionDialog({ trigger, open, onOpenChange }: ConnectionDial
             id="host"
             value={host}
             onChange={(e) => setHost(e.target.value)}
-            placeholder="localhost"
+            placeholder="192.168.0.32"
           />
+          <p className="text-xs text-muted-foreground">
+            Use your computer's local IP address (e.g., 192.168.0.32) or localhost
+          </p>
         </div>
 
         <div className="space-y-2">

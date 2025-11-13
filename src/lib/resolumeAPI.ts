@@ -27,15 +27,45 @@ export class ResolumeAPI {
   private port: number = 8080;
   private baseUrl: string = '';
   private isConnected: boolean = false;
+  private useProxy: boolean = false;
 
   constructor(host: string = 'localhost', port: number = 8080) {
     this.host = host;
     this.port = port;
-    this.baseUrl = `http://${host}:${port}/api/v1`;
+    // Detect if running in browser (not Electron) - use proxy server
+    this.useProxy = typeof window !== 'undefined' && !(window as any).electronAPI;
+    this.updateBaseUrl();
+  }
+
+  private updateBaseUrl(): void {
+    if (this.useProxy) {
+      // Use the proxy server endpoint
+      this.baseUrl = '/api/resolume/proxy';
+    } else {
+      // Direct connection (Electron or Node)
+      this.baseUrl = `http://${this.host}:${this.port}/api/v1`;
+    }
+  }
+
+  private async updateProxyTarget(): Promise<void> {
+    if (this.useProxy) {
+      try {
+        await fetch('/api/resolume/connection', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ host: this.host, port: this.port })
+        });
+      } catch (error) {
+        console.error('Failed to update proxy target:', error);
+      }
+    }
   }
 
   async connect(): Promise<boolean> {
     try {
+      // Update proxy target if using proxy
+      await this.updateProxyTarget();
+
       const response = await fetch(`${this.baseUrl}/composition`, {
         method: 'GET',
         headers: {
@@ -68,7 +98,7 @@ export class ResolumeAPI {
   updateConnection(host: string, port: number): void {
     this.host = host;
     this.port = port;
-    this.baseUrl = `http://${host}:${port}/api/v1`;
+    this.updateBaseUrl();
     this.isConnected = false;
   }
 
