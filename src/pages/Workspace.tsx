@@ -1,9 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { CueList } from "@/components/workspace/CueList";
 import { Inspector } from "@/components/workspace/Inspector";
 import { WorkspaceHeader } from "@/components/workspace/WorkspaceHeader";
 import { Toolbar } from "@/components/workspace/Toolbar";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import { projectStorage, CompanionProject } from "@/lib/projectStorage";
+import { useToast } from "@/hooks/use-toast";
 
 export interface Cue {
   id: string;
@@ -22,58 +25,85 @@ export interface Cue {
 }
 
 const Workspace = () => {
-  const [cues, setCues] = useState<Cue[]>([
-    { 
-      id: "1", 
-      number: "1", 
-      name: "Opening Sequence", 
-      type: "column", 
-      target: "Column 1", 
-      armed: true,
-      preWait: 0,
-      duration: 5.5,
-      postWait: 0,
-      continue: false
-    },
-    { 
-      id: "2", 
-      number: "2", 
-      name: "Main Beat Drop", 
-      type: "clip", 
-      target: "Column 2, Clip 3", 
-      armed: true,
-      preWait: 2.0,
-      duration: 10.25,
-      postWait: 1.0,
-      continue: true
-    },
-    { 
-      id: "3", 
-      number: "3", 
-      name: "Visual Break", 
-      type: "column", 
-      target: "Column 3", 
-      armed: false,
-      preWait: 0,
-      duration: 8.0,
-      postWait: 0,
-      continue: false
-    },
-    { 
-      id: "4", 
-      number: "4", 
-      name: "Finale", 
-      type: "group", 
-      armed: false,
-      preWait: 0,
-      duration: 15.0,
-      postWait: 2.5,
-      continue: false
-    },
-  ]);
-
-  const [selectedCue, setSelectedCue] = useState<Cue | null>(cues[0]);
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [currentProject, setCurrentProject] = useState<CompanionProject | null>(null);
+  const [cues, setCues] = useState<Cue[]>([]);
+  const [selectedCue, setSelectedCue] = useState<Cue | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  useEffect(() => {
+    const projectId = searchParams.get('project');
+    if (projectId) {
+      loadProject(projectId);
+    }
+  }, [searchParams]);
+
+  const loadProject = async (projectId: string) => {
+    const project = await projectStorage.loadProject(projectId);
+    if (project) {
+      setCurrentProject(project);
+      setCues(project.cues);
+      if (project.cues.length > 0) {
+        setSelectedCue(project.cues[0]);
+      }
+      
+      await projectStorage.updateLastOpened(projectId);
+
+      if (window.electronAPI) {
+        const result = await window.electronAPI.launchArenaComposition(project.avcFilePath);
+        if (result.success) {
+          toast({
+            title: "Arena Launched",
+            description: `Opened ${project.avcFileName}`
+          });
+        }
+      }
+    } else {
+      toast({
+        title: "Error",
+        description: "Project not found",
+        variant: "destructive"
+      });
+      navigate('/');
+    }
+  };
+
+  const saveCurrentProject = useCallback(async () => {
+    if (!currentProject) return;
+
+    const updated: CompanionProject = {
+      ...currentProject,
+      cues,
+      lastOpened: new Date().toISOString()
+    };
+
+    const result = await projectStorage.saveProject(updated);
+    if (result.success) {
+      setHasUnsavedChanges(false);
+      setCurrentProject(updated);
+    }
+  }, [currentProject, cues]);
+
+  useEffect(() => {
+    if (currentProject && cues.length > 0) {
+      setHasUnsavedChanges(true);
+      const timeoutId = setTimeout(() => {
+        saveCurrentProject();
+      }, 2000);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [cues, currentProject, saveCurrentProject]);
+
+  const handleCloseProject = () => {
+    if (hasUnsavedChanges) {
+      saveCurrentProject();
+    }
+    navigate('/');
+  };
 
   const handleAddCue = () => {
     const newCue: Cue = {
@@ -108,13 +138,24 @@ const Workspace = () => {
     console.log("GO pressed! Current cue:", selectedCue?.name);
   };
 
+  if (!currentProject) {
+    return (
+      <div className="h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Loading project...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen bg-background flex flex-col">
       <WorkspaceHeader 
-        projectName="Summer Festival 2024" 
+        projectName={currentProject.name}
         currentCueName={selectedCue?.name}
         onGo={handleGo}
         isPlaying={isPlaying}
+        onSave={saveCurrentProject}
+        onClose={handleCloseProject}
+        hasUnsavedChanges={hasUnsavedChanges}
       />
       
       <Toolbar />
