@@ -66,38 +66,29 @@ export const NewProjectDialog = ({ open, onOpenChange }: NewProjectDialogProps) 
 
     let avcPath = selectedAvcPath;
 
-    // If creating new composition
-    if (!avcPath && newCompositionName.trim()) {
-      if (window.electronAPI) {
-        setIsCreating(true);
-        const result = await window.electronAPI.createAvcFile(newCompositionName);
-        setIsCreating(false);
+    // If creating new composition (only in Electron)
+    if (!avcPath && newCompositionName.trim() && window.electronAPI) {
+      setIsCreating(true);
+      const result = await window.electronAPI.createAvcFile(newCompositionName);
+      setIsCreating(false);
 
-        if (!result.success) {
-          toast({
-            title: "Error",
-            description: result.error || "Failed to create Arena composition",
-            variant: "destructive"
-          });
-          return;
-        }
-
-        avcPath = result.path!;
-        toast({
-          title: "Success",
-          description: "Arena composition created successfully"
-        });
-      } else {
+      if (!result.success) {
         toast({
           title: "Error",
-          description: "Creating Arena compositions requires Electron environment",
+          description: result.error || "Failed to create Arena composition",
           variant: "destructive"
         });
         return;
       }
+
+      avcPath = result.path!;
+      toast({
+        title: "Success",
+        description: "Arena composition created successfully"
+      });
     }
 
-    // avcPath is now optional - can create project without composition
+    // Create project (composition is optional)
     try {
       setIsCreating(true);
       const project = await projectStorage.createProject(projectName.trim(), avcPath || '');
@@ -141,7 +132,18 @@ export const NewProjectDialog = ({ open, onOpenChange }: NewProjectDialogProps) 
             />
           </div>
 
-          <Tabs defaultValue="existing" className="w-full">
+          {!window.electronAPI && (
+            <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
+              Arena composition linking is only available in the Electron app. You can create a project without linking a composition.
+            </div>
+          )}
+
+          {window.electronAPI && (
+            <>
+              <div className="text-sm text-muted-foreground">
+                Optionally link an Arena composition to this project:
+              </div>
+              <Tabs defaultValue="existing" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="existing">Link Existing</TabsTrigger>
               <TabsTrigger value="new">Create New</TabsTrigger>
@@ -224,6 +226,8 @@ export const NewProjectDialog = ({ open, onOpenChange }: NewProjectDialogProps) 
               </div>
             </TabsContent>
           </Tabs>
+            </>
+          )}
         </div>
 
         <DialogFooter>
