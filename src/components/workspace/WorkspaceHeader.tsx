@@ -1,35 +1,98 @@
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save, Settings } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Input } from "@/components/ui/input";
+import { Play, Square, SkipForward, SkipBack, Pause } from "lucide-react";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface WorkspaceHeaderProps {
   projectName: string;
+  currentCueName?: string;
+  onGo: () => void;
+  isPlaying: boolean;
 }
 
-export const WorkspaceHeader = ({ projectName }: WorkspaceHeaderProps) => {
-  const navigate = useNavigate();
+export const WorkspaceHeader = ({ projectName, currentCueName, onGo, isPlaying }: WorkspaceHeaderProps) => {
+  const [editingName, setEditingName] = useState(false);
 
   return (
-    <header className="h-14 bg-surface border-b border-border flex items-center justify-between px-4">
-      <div className="flex items-center gap-3">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate("/")}
-          className="hover:bg-muted"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <h1 className="text-lg font-semibold text-foreground">{projectName}</h1>
+    <header className="h-20 bg-surface border-b border-border flex items-center justify-between px-4 gap-4">
+      {/* Left: GO Button */}
+      <Button
+        size="lg"
+        onClick={onGo}
+        className="h-14 w-24 text-xl font-bold bg-transparent border-2 border-green-500 text-green-500 hover:bg-green-500/20 hover:text-green-400"
+      >
+        GO
+      </Button>
+
+      {/* Center: Project info */}
+      <div className="flex-1 flex flex-col gap-1">
+        <div className="text-xs text-muted-foreground">{projectName}</div>
+        {editingName ? (
+          <Input
+            value={currentCueName || ""}
+            onBlur={() => setEditingName(false)}
+            autoFocus
+            className="h-8 bg-input border-border"
+          />
+        ) : (
+          <div
+            className="text-sm font-medium text-foreground cursor-pointer hover:text-primary"
+            onClick={() => setEditingName(true)}
+          >
+            {currentCueName || "No cue selected"}
+          </div>
+        )}
       </div>
 
+      {/* Right: Transport Controls */}
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" className="hover:bg-muted">
-          <Save className="w-5 h-5" />
+        <Button
+          size="icon"
+          variant="ghost"
+          className="h-10 w-10 hover:bg-muted"
+        >
+          <SkipBack className="w-5 h-5" />
         </Button>
-        <Button variant="ghost" size="icon" className="hover:bg-muted">
-          <Settings className="w-5 h-5" />
+
+        {isPlaying ? (
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-10 w-10 hover:bg-muted"
+          >
+            <Pause className="w-5 h-5" />
+          </Button>
+        ) : (
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-10 w-10 hover:bg-muted"
+          >
+            <Play className="w-5 h-5" />
+          </Button>
+        )}
+
+        <Button
+          size="icon"
+          variant="ghost"
+          className="h-10 w-10 hover:bg-muted"
+        >
+          <Square className="w-5 h-5" />
         </Button>
+
+        <Button
+          size="icon"
+          variant="ghost"
+          className="h-10 w-10 hover:bg-muted"
+        >
+          <SkipForward className="w-5 h-5" />
+        </Button>
+
+        <div className="ml-4 text-sm">
+          <span className="text-muted-foreground">Time: </span>
+          <span className="text-foreground font-mono">00:00.00</span>
+        </div>
       </div>
     </header>
   );
