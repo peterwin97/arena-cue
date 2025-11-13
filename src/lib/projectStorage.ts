@@ -91,8 +91,8 @@ class ProjectStorage {
     const project: CompanionProject = {
       id: this.generateId(),
       name,
-      avcFilePath: avcPath,
-      avcFileName: avcPath.split(/[\\/]/).pop() || 'unknown.avc',
+      avcFilePath: avcPath || '',
+      avcFileName: avcPath ? (avcPath.split(/[\\/]/).pop() || 'unknown.avc') : 'No composition linked',
       createdAt: new Date().toISOString(),
       lastOpened: new Date().toISOString(),
       cues: [],
