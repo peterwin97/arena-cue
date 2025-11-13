@@ -1,11 +1,54 @@
 const express = require('express');
 const cors = require('cors');
+const { createProxyMiddleware } = require('http-proxy-middleware');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
+
+// Store current Resolume connection settings
+let resolumeTarget = {
+  host: 'localhost',
+  port: 8080
+};
+
+// Endpoint to update Resolume connection settings
+app.post('/api/resolume/connection', (req, res) => {
+  const { host, port } = req.body;
+  if (host && port) {
+    resolumeTarget = { host, port };
+    console.log(`Updated Resolume target to ${host}:${port}`);
+    res.json({ success: true, host, port });
+  } else {
+    res.status(400).json({ error: 'Host and port required' });
+  }
+});
+
+// Proxy all Resolume API requests
+app.use('/api/resolume/proxy', (req, res, next) => {
+  const targetUrl = `http://${resolumeTarget.host}:${resolumeTarget.port}`;
+  
+  createProxyMiddleware({
+    target: targetUrl,
+    changeOrigin: true,
+    pathRewrite: {
+      '^/api/resolume/proxy': '/api/v1'
+    },
+    onError: (err, req, res) => {
+      console.error('Proxy error:', err);
+      res.status(502).json({ 
+        error: 'Failed to connect to Resolume Arena',
+        details: err.message,
+        target: targetUrl
+      });
+    },
+    onProxyReq: (proxyReq, req, res) => {
+      console.log(`Proxying ${req.method} ${req.url} -> ${targetUrl}${req.url.replace('/api/resolume/proxy', '/api/v1')}`);
+    }
+  })(req, res, next);
+});
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
