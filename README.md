@@ -1,78 +1,177 @@
 # Resolume Companion
 
-Professional cue management companion app for Resolume Arena with QLab-inspired interface.
+A professional cue management companion app for Resolume Arena, inspired by QLab's workflow. Control your Resolume compositions with precision through an intuitive desktop interface featuring cue lists, transport controls, and real-time inspector panels.
+
+## What is Resolume Companion?
+
+Resolume Companion bridges the gap between stage management and live visuals by providing:
+
+- **Cue List Management**: Organize and trigger Resolume compositions in a structured, sequential manner
+- **Transport Controls**: Professional playback controls for live performance environments
+- **Real-time Inspector**: Monitor and adjust parameters on-the-fly
+- **Desktop Integration**: Native Electron app for seamless workflow integration
+
+Perfect for VJs, lighting designers, and technical directors who need precise control over Resolume Arena during live performances.
+
+## Architecture
+
+This is a multi-process Electron application with three main components:
+
+```
+┌─────────────────────────────────────────────────────┐
+│                  Electron (Desktop)                  │
+│  ┌───────────────────────────────────────────────┐  │
+│  │         React Frontend (Vite)                 │  │
+│  │  • Cue List UI                                │  │
+│  │  • Transport Controls                         │  │
+│  │  • Inspector Panel                            │  │
+│  │  Port 8080 (dev)                              │  │
+│  └───────────────────────────────────────────────┘  │
+│                        ↕ IPC                         │
+│  ┌───────────────────────────────────────────────┐  │
+│  │         Express Server                        │  │
+│  │  • Resolume OSC/API Communication             │  │
+│  │  • Composition Management                     │  │
+│  │  Port 3000                                    │  │
+│  └───────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────┘
+                        ↕
+              Resolume Arena (OSC/API)
+```
+
+## Installation
+
+### Prerequisites
+
+- **Node.js 18+** - [Download here](https://nodejs.org/) or install via [nvm](https://github.com/nvm-sh/nvm)
+- **npm** (comes with Node.js)
+- **Resolume Arena** - Running on the same machine or network
+
+### Step 1: Clone the Repository
+
+```bash
+git clone <YOUR_GIT_URL>
+cd resolume-companion
+```
+
+### Step 2: Install All Dependencies
+
+```bash
+# Install root dependencies (React/Vite frontend)
+npm install
+
+# Install server dependencies (Express API)
+cd server
+npm install
+cd ..
+
+# Install Electron dependencies (Desktop wrapper)
+cd electron
+npm install
+cd ..
+```
+
+### Step 3: Configure Environment Variables
+
+Create a `.env` file in the `server/` directory:
+
+```bash
+# server/.env
+PORT=3000
+RESOLUME_HOST=localhost
+RESOLUME_PORT=7000
+```
+
+## Running the Application
+
+### Option 1: Development Mode (Frontend Only)
+
+Run just the React frontend for UI development:
+
+```bash
+npm run dev
+```
+
+Vite dev server starts at `http://localhost:8080`
+
+### Option 2: Full Stack Development (Manual)
+
+Run all three components in separate terminals:
+
+**Terminal 1 - Frontend:**
+```bash
+npm run dev
+```
+
+**Terminal 2 - Express Server:**
+```bash
+cd server
+npm run dev
+```
+
+**Terminal 3 - Electron (optional):**
+```bash
+cd electron
+npm start
+```
+
+### Option 3: Full Stack with Concurrently (Recommended)
+
+*Note: This requires adding `concurrently` to package.json scripts (manual step)*
+
+```bash
+npm run dev:full
+```
+
+This runs both the frontend and server with colored output in a single terminal.
+
+## Building for Production
+
+### Build the Frontend
+
+```bash
+npm run build
+```
+
+This compiles the React app to `client/dist/` which Electron loads in production.
+
+### Package the Electron App
+
+```bash
+cd electron
+# Add electron-builder or similar for packaging
+npm run package
+```
 
 ## Project Structure
 
 ```
-root/
-├── electron/           # Electron main process
-│   ├── main.js        # Main Electron process
-│   ├── preload.js     # Preload script for IPC
-│   └── package.json   # Electron config
-├── server/            # Express API for Resolume communication
-│   ├── index.js       # Express server
-│   ├── package.json   # Server dependencies
-│   └── .env          # Server environment variables
-├── client/            # Built client files (production build output)
-│   └── dist/         # Vite build output (created on build)
-├── src/              # React/Vite source code
-│   ├── components/   # React components
-│   ├── pages/        # Page components
-│   ├── hooks/        # Custom React hooks
-│   └── lib/          # Utility functions
-├── public/           # Static assets
-├── index.html        # Entry HTML file
-├── vite.config.ts    # Vite configuration (builds to client/dist)
-└── package.json      # Root package.json
+resolume-companion/
+├── electron/              # Electron main process
+│   ├── main.js           # Electron entry point
+│   ├── preload.js        # IPC bridge (secure context)
+│   └── package.json      # Electron configuration
+│
+├── server/               # Express backend
+│   ├── index.js          # API server + Resolume communication
+│   ├── package.json      # Server dependencies
+│   └── .env             # Server configuration
+│
+├── src/                  # React frontend source
+│   ├── components/       # UI components
+│   │   └── workspace/    # Workspace-specific components
+│   ├── pages/           # Page routes
+│   ├── hooks/           # Custom React hooks
+│   └── lib/             # Utilities and helpers
+│
+├── client/               # Production build output
+│   └── dist/            # Generated by Vite
+│
+├── public/              # Static assets
+├── index.html           # HTML entry point
+├── vite.config.ts       # Vite bundler config
+└── package.json         # Root dependencies
 ```
-
-## Development
-
-The project uses:
-- **Vite + React** for the frontend (port 5173)
-- **Express** for the backend API (port 3000)  
-- **Electron** for desktop app wrapper
-
-### Prerequisites
-
-- Node.js 18+ 
-- npm or yarn
-
-### Setup
-
-Install dependencies at root:
-```sh
-npm install
-```
-
-Install server dependencies:
-```sh
-cd server && npm install && cd ..
-```
-
-Install Electron dependencies:
-```sh
-cd electron && npm install && cd ..
-```
-
-### Running in Development
-
-Start Vite dev server:
-```sh
-npm run dev
-```
-
-This runs the React app on port 5173. To run the full Electron stack with Express API, you'll need to run the server and Electron separately (or use concurrently - see scripts below).
-
-### Building for Production
-
-Build the client:
-```sh
-npm run build
-```
-
-This builds the React app to `client/dist/` which Electron loads in production mode.
 
 ## Tech Stack
 
