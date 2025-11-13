@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { CueList } from "@/components/workspace/CueList";
 import { Inspector } from "@/components/workspace/Inspector";
-import { TransportControls } from "@/components/workspace/TransportControls";
 import { WorkspaceHeader } from "@/components/workspace/WorkspaceHeader";
+import { Toolbar } from "@/components/workspace/Toolbar";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 
 export interface Cue {
   id: string;
@@ -13,17 +14,66 @@ export interface Cue {
   duration?: number;
   armed: boolean;
   notes?: string;
+  preWait?: number;
+  postWait?: number;
+  continue?: boolean;
+  color?: string;
+  icon?: string;
 }
 
 const Workspace = () => {
   const [cues, setCues] = useState<Cue[]>([
-    { id: "1", number: "1", name: "Opening Sequence", type: "column", target: "Column 1", armed: true },
-    { id: "2", number: "2", name: "Main Beat Drop", type: "clip", target: "Column 2, Clip 3", armed: true },
-    { id: "3", number: "3", name: "Visual Break", type: "column", target: "Column 3", armed: false },
-    { id: "4", number: "4", name: "Finale", type: "group", armed: false },
+    { 
+      id: "1", 
+      number: "1", 
+      name: "Opening Sequence", 
+      type: "column", 
+      target: "Column 1", 
+      armed: true,
+      preWait: 0,
+      duration: 5.5,
+      postWait: 0,
+      continue: false
+    },
+    { 
+      id: "2", 
+      number: "2", 
+      name: "Main Beat Drop", 
+      type: "clip", 
+      target: "Column 2, Clip 3", 
+      armed: true,
+      preWait: 2.0,
+      duration: 10.25,
+      postWait: 1.0,
+      continue: true
+    },
+    { 
+      id: "3", 
+      number: "3", 
+      name: "Visual Break", 
+      type: "column", 
+      target: "Column 3", 
+      armed: false,
+      preWait: 0,
+      duration: 8.0,
+      postWait: 0,
+      continue: false
+    },
+    { 
+      id: "4", 
+      number: "4", 
+      name: "Finale", 
+      type: "group", 
+      armed: false,
+      preWait: 0,
+      duration: 15.0,
+      postWait: 2.5,
+      continue: false
+    },
   ]);
 
   const [selectedCue, setSelectedCue] = useState<Cue | null>(cues[0]);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const handleAddCue = () => {
     const newCue: Cue = {
@@ -32,6 +82,10 @@ const Workspace = () => {
       name: `New Cue ${cues.length + 1}`,
       type: "clip",
       armed: false,
+      preWait: 0,
+      duration: 0,
+      postWait: 0,
+      continue: false,
     };
     setCues([...cues, newCue]);
     setSelectedCue(newCue);
@@ -49,38 +103,39 @@ const Workspace = () => {
     setSelectedCue(updatedCue);
   };
 
+  const handleGo = () => {
+    setIsPlaying(!isPlaying);
+    console.log("GO pressed! Current cue:", selectedCue?.name);
+  };
+
   return (
     <div className="h-screen bg-background flex flex-col">
-      <WorkspaceHeader projectName="Summer Festival 2024" />
+      <WorkspaceHeader 
+        projectName="Summer Festival 2024" 
+        currentCueName={selectedCue?.name}
+        onGo={handleGo}
+        isPlaying={isPlaying}
+      />
       
-      <div className="flex-1 flex overflow-hidden">
-        <CueList
-          cues={cues}
-          selectedCue={selectedCue}
-          onSelectCue={setSelectedCue}
-          onAddCue={handleAddCue}
-          onDeleteCue={handleDeleteCue}
-        />
+      <Toolbar />
+
+      <ResizablePanelGroup direction="vertical" className="flex-1">
+        <ResizablePanel defaultSize={70} minSize={30}>
+          <CueList
+            cues={cues}
+            selectedCue={selectedCue}
+            onSelectCue={setSelectedCue}
+            onAddCue={handleAddCue}
+            onDeleteCue={handleDeleteCue}
+          />
+        </ResizablePanel>
         
-        <div className="flex-1 bg-background flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <div className="text-6xl font-bold text-muted-foreground/20">RESOLUME</div>
-            <p className="text-muted-foreground">Workspace Preview Area</p>
-            {selectedCue && (
-              <div className="mt-8 p-6 bg-surface border border-border rounded-lg inline-block">
-                <p className="text-sm text-muted-foreground mb-2">Active Cue</p>
-                <p className="text-2xl font-semibold text-primary">
-                  {selectedCue.number}. {selectedCue.name}
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
+        <ResizableHandle withHandle />
         
-        <Inspector selectedCue={selectedCue} onUpdateCue={handleUpdateCue} />
-      </div>
-      
-      <TransportControls />
+        <ResizablePanel defaultSize={30} minSize={20} maxSize={50}>
+          <Inspector selectedCue={selectedCue} onUpdateCue={handleUpdateCue} />
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
   );
 };
